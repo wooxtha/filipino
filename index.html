@@ -2,39 +2,206 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Filipino Quiz</title>
   <style>
     body {
-      background-color: #f0f8ff; /* warna biru muda */
-      font-family: Arial, sans-serif;
-      color: #333;
+      background-color: #121212;
+      color: #ffffff;
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
       padding: 20px;
     }
-    h1 {
-      color: #0077cc; /* warna biru tua */
+    .quiz-container {
+      background-color: #1e1e1e;
+      border-radius: 15px;
+      padding: 30px;
+      width: 90%;
+      max-width: 600px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.5);
     }
-    img {
-      max-width: 200px;
-      display: block;
+    h1 {
+      color: #00ff88;
+      text-align: center;
+    }
+    .question-image {
+      width: 100%;
+      max-height: 200px;
+      object-fit: contain;
+      margin-bottom: 15px;
+      border-radius: 10px;
+    }
+    .question {
+      font-size: 1.2em;
       margin-bottom: 20px;
     }
-    button {
-      background-color: #0077cc;
-      color: white;
-      border: none;
-      padding: 10px 15px;
-      cursor: pointer;
-      border-radius: 5px;
-      font-size: 16px;
+    .options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
-    button:hover {
-      background-color: #005fa3;
+    .option-btn {
+      background-color: #292929;
+      color: white;
+      border: 2px solid #444;
+      padding: 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    .option-btn:hover {
+      background-color: #00ff88;
+      color: black;
+    }
+    .feedback {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+    .correct {
+      color: #00ff88;
+    }
+    .incorrect {
+      color: #ff4c4c;
     }
   </style>
 </head>
 <body>
-  <h1>Welcome to Filipino Quiz!</h1>
-  <img src="https://upload.wikimedia.org/wikipedia/commons/9/99/Flag_of_the_Philippines.svg" alt="Philippines Flag" />
-  <!-- Isi quiz di sini -->
+  <div class="quiz-container">
+    <h1>Filipino Quiz</h1>
+    <img id="question-image" class="question-image" src="" alt=""/>
+    <div id="question" class="question"></div>
+    <div id="options" class="options"></div>
+    <div id="feedback" class="feedback"></div>
+  </div>
+
+  <!-- Audio -->
+  <audio id="correctSound" src="sounds/correct-6033.mp3"></audio>
+  <audio id="wrongSound" src="sounds/wrong-47985.mp3"></audio>
+
+  <script>
+    const quizData = [
+      {
+        question: "What is 'Good morning' in Filipino?",
+        image: "images/greeting.png",
+        options: ["Magandang gabi", "Magandang umaga", "Salamat", "Oo"],
+        correct: "Magandang umaga",
+        explanation: "‘Magandang’ means good/beautiful, and ‘umaga’ means morning."
+      },
+      {
+        question: "What is the Filipino word for 'Office'?",
+        image: "images/place.png",
+        options: ["Tindahan", "Ospital", "Opisina", "Paaralan"],
+        correct: "Opisina",
+        explanation: "‘Opisina’ is borrowed from the Spanish word 'oficina'."
+      },
+      {
+        question: "How do you say 'Thank you' in Filipino?",
+        image: "images/greeting.png",
+        options: ["Walang anuman", "Salamat", "Pakiusap", "Tama"],
+        correct: "Salamat",
+        explanation: "A simple and common way to say thank you in Filipino."
+      },
+      {
+        question: "What is the polite version of 'Kumusta'?",
+        image: "images/greeting.png",
+        options: ["Kumusta ka?", "Kumusta po", "Kumusta ako", "Kumusta siya"],
+        correct: "Kumusta po",
+        explanation: "‘Po’ is added for politeness in Filipino."
+      },
+      {
+        question: "How do you say 'Restroom' commonly in Filipino?",
+        image: "images/place.png",
+        options: ["Silid", "CR", "Palengke", "Mall"],
+        correct: "CR",
+        explanation: "‘CR’ stands for Comfort Room, commonly used in the Philippines."
+      },
+      {
+        question: "How do you respond to 'Salamat'?",
+        image: "images/greeting.png",
+        options: ["Salamat din", "Walang anuman", "Oo", "Hindi"],
+        correct: "Walang anuman",
+        explanation: "‘Walang anuman’ literally means 'it's nothing'."
+      },
+      {
+        question: "How do you say 'Awesome!' in Filipino?",
+        image: "images/reaction.png",
+        options: ["Ayos!", "Talaga?", "Ang galing!", "Mali"],
+        correct: "Ang galing!",
+        explanation: "‘Galing’ means skill, and this is an exclamation of amazement."
+      },
+      {
+        question: "How do you say 'No' in Filipino?",
+        image: "images/reaction.png",
+        options: ["Hindi", "Oo", "Tama", "Sige"],
+        correct: "Hindi",
+        explanation: "‘Hindi’ is the Filipino word for 'no'."
+      },
+      {
+        question: "What is 'Paaralan' in English?",
+        image: "images/place.png",
+        options: ["Church", "Hospital", "School", "Bank"],
+        correct: "School",
+        explanation: "‘Paaralan’ comes from 'aral' (study) and means school."
+      },
+      {
+        question: "What does 'Tama 'yan!' mean?",
+        image: "images/reaction.png",
+        options: ["That's wrong", "That's nice", "That's right", "That’s it"],
+        correct: "That's right",
+        explanation: "‘Tama’ means correct, and ‘'yan’ means 'that'."
+      }
+    ];
+
+    let currentQuestion = 0;
+    const questionEl = document.getElementById("question");
+    const optionsEl = document.getElementById("options");
+    const feedbackEl = document.getElementById("feedback");
+    const questionImg = document.getElementById("question-image");
+    const correctSound = document.getElementById("correctSound");
+    const wrongSound = document.getElementById("wrongSound");
+
+    function loadQuestion() {
+      const item = quizData[currentQuestion];
+      questionEl.textContent = item.question;
+      questionImg.src = item.image;
+      feedbackEl.textContent = "";
+      feedbackEl.className = "feedback";
+
+      optionsEl.innerHTML = "";
+      item.options.forEach(option => {
+        const btn = document.createElement("button");
+        btn.textContent = option;
+        btn.className = "option-btn";
+        btn.onclick = () => {
+          if (option === item.correct) {
+            correctSound.play();
+            feedbackEl.innerHTML = "✅ Correct! " + item.explanation;
+            feedbackEl.classList.add("correct");
+          } else {
+            wrongSound.play();
+            feedbackEl.innerHTML = "❌ Incorrect. " + item.explanation;
+            feedbackEl.classList.add("incorrect");
+          }
+
+          setTimeout(() => {
+            currentQuestion++;
+            if (currentQuestion < quizData.length) {
+              loadQuestion();
+            } else {
+              questionEl.textContent = "🎉 Quiz Completed!";
+              questionImg.style.display = "none";
+              optionsEl.innerHTML = "";
+              feedbackEl.innerHTML = "";
+            }
+          }, 2500);
+        };
+        optionsEl.appendChild(btn);
+      });
+    }
+
+    loadQuestion();
+  </script>
 </body>
 </html>
